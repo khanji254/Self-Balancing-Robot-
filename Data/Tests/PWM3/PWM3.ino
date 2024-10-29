@@ -25,9 +25,9 @@ float output;       // Motor speed adjustment
 //float Kp = 0.11;
 //float Ki = 0.0009;
 //float Kd = 0.010;
-float Kp = 1;
-float Ki =0.01;
-float Kd =3;
+float Kp = 10;
+float Ki =0;
+float Kd =0;
 
 float lastInput = 0; // Last input for derivative calculation
 float integral = 0;  // Integral sum
@@ -155,8 +155,8 @@ void adjustMotors(float adjustment) {
   int rightSpeed = baseSpeed + adjustment;
 
   // Ensure speed values are within the valid range (0-255)
-  leftSpeed = constrain(leftSpeed, 0, 255);
-  rightSpeed = constrain(rightSpeed, 0, 255);
+  leftSpeed = constrain(leftSpeed, 120, 255);
+  rightSpeed = constrain(rightSpeed, 120, 255);
 
   analogWrite(ENA, rightSpeed); // Right motor
   analogWrite(ENB, leftSpeed);   // Left motor
@@ -176,14 +176,15 @@ void Stop_Motors() {
 }
 
 
-// Function to move the bot forward
-void Move_Forward() {
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, HIGH);  // Right wheel forward
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, HIGH);  // Left wheel forward
-  Serial.println("Moving forward.");
+void Move_Forward( ) {
+    // Move forward with the calculated adjustment
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, HIGH); // Right wheel forward
+    digitalWrite(IN3, LOW);
+    digitalWrite(IN4, HIGH); // Left wheel forward
+    Serial.println("Moving forward.");
 }
+
 
 // Function to move the bot backward
 void Move_Backward() {
@@ -193,7 +194,6 @@ void Move_Backward() {
   digitalWrite(IN4, LOW);  // Left wheel backward
   Serial.println("Moving backward.");
 }
-
 // Function to turn the bot left
 void Turn_Left() {
   analogWrite(ENA, 255); // Right motor at full speed
@@ -203,6 +203,12 @@ void Turn_Left() {
   digitalWrite(IN3, LOW); 
   digitalWrite(IN4, HIGH);  // Left wheel forward
   Serial.println("Turning left.");
+  
+
+  
+  // Update the setPoint with the current yaw angle
+  setPoint = ypr[0] * 180 / M_PI;  // Update setPoint to the new yaw after the turn
+  Serial.println("Updated setPoint after left turn: " + String(setPoint));
 }
 
 // Function to turn the bot right
@@ -214,8 +220,13 @@ void Turn_Right() {
   digitalWrite(IN3, LOW); 
   digitalWrite(IN4, HIGH);  // Left wheel forward
   Serial.println("Turning right.");
-}
+  
 
+  
+  // Update the setPoint with the current yaw angle
+  setPoint = ypr[0] * 180 / M_PI;  // Update setPoint to the new yaw after the turn
+  Serial.println("Updated setPoint after right turn: " + String(setPoint));
+}
 
 // Function to rotate the bot left (pivot in place)
 void Rotate_Left() {
@@ -226,6 +237,12 @@ void Rotate_Left() {
   digitalWrite(IN3, HIGH); 
   digitalWrite(IN4, LOW);   // Left wheel backward
   Serial.println("Rotating left.");
+  
+
+  
+  // Update the setPoint with the current yaw angle
+  setPoint = ypr[0] * 180 / M_PI;  // Update setPoint to the new yaw after the rotation
+  Serial.println("Updated setPoint after left rotation: " + String(setPoint));
 }
 
 // Function to rotate the bot right (pivot in place)
@@ -237,7 +254,14 @@ void Rotate_Right() {
   digitalWrite(IN3, LOW); 
   digitalWrite(IN4, HIGH);  // Left wheel forward
   Serial.println("Rotating right.");
+  
+
+  
+  // Update the setPoint with the current yaw angle
+  setPoint = ypr[0] * 180 / M_PI;  // Update setPoint to the new yaw after the rotation
+  Serial.println("Updated setPoint after right rotation: " + String(setPoint));
 }
+
 
 // Function to update costants via bluetooth or software serial(Ps i didn't know how to write the function while typing this. I will think about it tho. hmmm....this comment is awfully long:())
 void Update_Constantz() {
@@ -323,7 +347,7 @@ void loop() {
     // The MPU6050 part 
     input = ypr[0] * 180 / M_PI; // Convert to degrees
     Serial.println("The Input is: " + String(input));
-    // PID control logic
+   // PID control logic
     float error = setPoint - input; // Calculate error
     integral += error;               // Integral term
     float derivative = input - lastInput; // Derivative term
